@@ -1,0 +1,13 @@
+import React from "react";
+
+export default function Historial() {
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-bold mb-4">Historial de Producción</h2>
+      <p className="text-gray-600">
+        Aquí se mostrará el historial de registros de producción y paros. 
+        (Pendiente de conectar con almacenamiento y cálculos de OEE).
+      </p>
+    </div>
+  );
+}
