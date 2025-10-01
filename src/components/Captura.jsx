@@ -4,17 +4,16 @@ import { operadores } from "../data/operadores";
 
 export default function Captura() {
   const [form, setForm] = useState({
-    fecha: new Date().toISOString().split("T")[0],
     codigo: "",
     nombre: "",
     maquina: "",
     proceso: "",
-    eph: 0,
+    fecha: new Date().toISOString().slice(0, 10),
     inicio: "",
     fin: "",
     carretas: "",
-    piezasTotales: 0,
-    piezasBuenas: 0,
+    piezasTotales: "",
+    piezasBuenas: "",
     paros: [],
   });
 
@@ -51,84 +50,69 @@ export default function Captura() {
     setForm({ ...form, paros: form.paros.filter((_, idx) => idx !== i) });
   };
 
-  const limpiar = () => {
-    setForm({
-      fecha: new Date().toISOString().split("T")[0],
-      codigo: "",
-      nombre: "",
-      maquina: "",
-      proceso: "",
-      eph: 0,
-      inicio: "",
-      fin: "",
-      carretas: "",
-      piezasTotales: 0,
-      piezasBuenas: 0,
-      paros: [],
-    });
-  };
-
   const guardar = () => {
-    if (!form.maquina || !form.proceso || !form.codigo) {
-      alert("Revisa los campos marcados antes de guardar.");
+    if (!form.maquina || !form.proceso) {
+      alert("Debes seleccionar máquina y proceso.");
       return;
     }
     const registros = JSON.parse(localStorage.getItem("registros") || "[]");
     registros.push(form);
     localStorage.setItem("registros", JSON.stringify(registros));
     alert("Registro guardado ✅");
-    limpiar();
+    setForm({
+      codigo: "",
+      nombre: "",
+      maquina: "",
+      proceso: "",
+      fecha: new Date().toISOString().slice(0, 10),
+      inicio: "",
+      fin: "",
+      carretas: "",
+      piezasTotales: "",
+      piezasBuenas: "",
+      paros: [],
+    });
   };
 
   return (
-    <div className="p-4 bg-white rounded shadow">
+    <div className="p-4 bg-white shadow">
       <h2 className="text-xl font-bold mb-4">Registro de Producción</h2>
 
-      {/* MENÚ 1: MÁQUINA */}
+      {/* Máquina */}
       <label className="block font-semibold">Máquina</label>
       <select
         name="maquina"
         value={form.maquina}
-        onChange={(e) => setForm({ ...form, maquina: e.target.value, proceso: "", eph: 0 })}
-        className="border p-2 w-full mb-2"
+        onChange={handleChange}
+        className="border p-2 w-full mb-2 rounded-none"
       >
-        <option value="">Seleccione máquina...</option>
-        {catalogo.map((m, i) => (
-          <option key={i} value={m.maquina}>
-            {m.maquina}
+        <option value="">Seleccione...</option>
+        {[...new Set(catalogo.map((m) => m.maquina))].map((maq, i) => (
+          <option key={i} value={maq}>
+            {maq}
           </option>
         ))}
       </select>
 
-      {/* MENÚ 2: PROCESO / PIEZA */}
+      {/* Proceso */}
       <label className="block font-semibold">Proceso / Pieza</label>
       <select
         name="proceso"
         value={form.proceso}
-        onChange={(e) =>
-          setForm({
-            ...form,
-            proceso: e.target.value,
-            eph:
-              catalogo
-                .find((m) => m.maquina === form.maquina)
-                ?.procesos.find((p) => p.nombre === e.target.value)?.eph || 0,
-          })
-        }
-        className="border p-2 w-full mb-2"
-        disabled={!form.maquina}
+        onChange={handleChange}
+        className="border p-2 w-full mb-2 rounded-none"
       >
-        <option value="">Seleccione proceso...</option>
+        <option value="">Seleccione...</option>
         {catalogo
-          .find((m) => m.maquina === form.maquina)
-          ?.procesos.map((p, i) => (
-            <option key={i} value={p.nombre}>
-              {p.nombre}
+          .filter((m) => m.maquina === form.maquina)
+          .map((m, i) => (
+            <option key={i} value={m.proceso}>
+              {m.proceso}
             </option>
           ))}
       </select>
 
-      {/* FECHA Y OPERADOR */}
+      {/* Fecha y Operador */}
       <div className="flex gap-2">
         <div className="flex-1">
           <label className="block font-semibold">Fecha</label>
@@ -137,7 +121,7 @@ export default function Captura() {
             name="fecha"
             value={form.fecha}
             onChange={handleChange}
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-none"
           />
         </div>
         <div className="flex-1">
@@ -147,7 +131,7 @@ export default function Captura() {
             name="codigo"
             value={form.codigo}
             onChange={handleCodigo}
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-none"
           />
         </div>
       </div>
@@ -157,10 +141,10 @@ export default function Captura() {
         type="text"
         value={form.nombre}
         disabled
-        className="border p-2 w-full mb-2 bg-gray-100"
+        className="border p-2 w-full mb-2 bg-gray-100 rounded-none"
       />
 
-      {/* HORAS */}
+      {/* Horas */}
       <div className="flex gap-2">
         <div className="flex-1">
           <label className="block font-semibold">Hora inicio</label>
@@ -169,7 +153,7 @@ export default function Captura() {
             name="inicio"
             value={form.inicio}
             onChange={handleChange}
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-none"
           />
         </div>
         <div className="flex-1">
@@ -179,51 +163,28 @@ export default function Captura() {
             name="fin"
             value={form.fin}
             onChange={handleChange}
-            className="border p-2 w-full mb-2"
+            className="border p-2 w-full mb-2 rounded-none"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block font-semibold">Carretas programadas</label>
+          <input
+            type="number"
+            name="carretas"
+            value={form.carretas}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2 rounded-none"
           />
         </div>
       </div>
 
-      {/* CARRETAS Y PIEZAS */}
-      <label className="block font-semibold">Carretas programadas</label>
-      <input
-        type="number"
-        name="carretas"
-        value={form.carretas}
-        onChange={handleChange}
-        className="border p-2 w-full mb-2"
-      />
-
-      <div className="flex gap-2">
-        <div className="flex-1">
-          <label className="block font-semibold">Piezas totales</label>
-          <input
-            type="number"
-            name="piezasTotales"
-            value={form.piezasTotales}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2"
-          />
-        </div>
-        <div className="flex-1">
-          <label className="block font-semibold">Piezas buenas</label>
-          <input
-            type="number"
-            name="piezasBuenas"
-            value={form.piezasBuenas}
-            onChange={handleChange}
-            className="border p-2 w-full mb-2"
-          />
-        </div>
-      </div>
-
-      {/* PAROS */}
+      {/* Paros */}
       <div className="mt-4">
         <h3 className="font-semibold mb-2">Paros</h3>
         <select
           value={nuevoParo.tipo}
           onChange={(e) => setNuevoParo({ ...nuevoParo, tipo: e.target.value })}
-          className="border p-2 w-full mb-2"
+          className="border p-2 w-full mb-2 rounded-none"
         >
           <option value="">Seleccione tipo</option>
           <option value="Mecánico">Mecánico</option>
@@ -238,7 +199,7 @@ export default function Captura() {
           onChange={(e) =>
             setNuevoParo({ ...nuevoParo, minutos: e.target.value })
           }
-          className="border p-2 w-full mb-2"
+          className="border p-2 w-full mb-2 rounded-none"
         />
         <input
           type="text"
@@ -247,11 +208,11 @@ export default function Captura() {
           onChange={(e) =>
             setNuevoParo({ ...nuevoParo, descripcion: e.target.value })
           }
-          className="border p-2 w-full mb-2"
+          className="border p-2 w-full mb-2 rounded-none"
         />
         <button
           onClick={agregarParo}
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-blue-600 text-white px-4 py-2 mb-2"
         >
           + Agregar paro
         </button>
@@ -267,7 +228,7 @@ export default function Captura() {
               </span>
               <button
                 onClick={() => eliminarParo(i)}
-                className="bg-red-600 text-white px-2 py-1 rounded"
+                className="bg-red-600 text-white px-2 py-1"
               >
                 Eliminar
               </button>
@@ -276,17 +237,55 @@ export default function Captura() {
         </ul>
       </div>
 
-      {/* BOTONES */}
+      {/* Piezas */}
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <label className="block font-semibold">Piezas totales</label>
+          <input
+            type="number"
+            name="piezasTotales"
+            value={form.piezasTotales}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2 rounded-none"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block font-semibold">Piezas buenas</label>
+          <input
+            type="number"
+            name="piezasBuenas"
+            value={form.piezasBuenas}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2 rounded-none"
+          />
+        </div>
+      </div>
+
+      {/* Botones */}
       <div className="flex gap-2 mt-4">
         <button
           onClick={guardar}
-          className="bg-green-600 text-white px-4 py-2 rounded"
+          className="bg-green-600 text-white px-4 py-2"
         >
           Guardar registro
         </button>
         <button
-          onClick={limpiar}
-          className="bg-gray-500 text-white px-4 py-2 rounded"
+          onClick={() =>
+            setForm({
+              codigo: "",
+              nombre: "",
+              maquina: "",
+              proceso: "",
+              fecha: new Date().toISOString().slice(0, 10),
+              inicio: "",
+              fin: "",
+              carretas: "",
+              piezasTotales: "",
+              piezasBuenas: "",
+              paros: [],
+            })
+          }
+          className="bg-gray-600 text-white px-4 py-2"
         >
           Limpiar todo
         </button>
