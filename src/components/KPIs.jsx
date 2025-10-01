@@ -8,37 +8,52 @@ export default function KPIs() {
     const registros = JSON.parse(localStorage.getItem("registros") || "[]");
     if (registros.length === 0) return;
 
-    // Tomamos el último registro guardado
+    // Tomamos el último registro
     const r = registros[registros.length - 1];
 
-    // Buscar EPH en el catálogo
-    const maquina = catalogo.find((m) => m.maquina === r.maquina);
-    const eph = maquina ? maquina.eph : 1;
+    // Buscar EPH en catálogo (según máquina y proceso)
+    const maquina = catalogo.find(
+      (m) => m.maquina === r.maquina && m.proceso === r.proceso
+    );
+    const eph = maquina && maquina.eph ? Number(maquina.eph) : 1; // fallback
 
-    // Calcular tiempos
+    // --- Tiempos base ---
     const tiempoCalendario = 24 * 60; // 1440 min
-    const inicio = new Date(`1970-01-01T${r.inicio}:00`);
-    const fin = new Date(`1970-01-01T${r.fin}:00`);
-    const tiempoProgramado = (fin - inicio) / 60000;
+    const inicio = new Date(`1970-01-01T${r.inicio || "00:00"}:00`);
+    const fin = new Date(`1970-01-01T${r.fin || "00:00"}:00`);
+    const tiempoProgramado = Math.max((fin - inicio) / 60000, 0);
 
     const tiempoLibre = tiempoCalendario - tiempoProgramado;
-    const parosNoPlaneados = r.paros
+
+    // --- Paros ---
+    const parosNoPlaneados = (r.paros || [])
       .filter((p) => p.tipo !== "Planeado")
-      .reduce((a, b) => a + Number(b.minutos), 0);
-    const parosPlaneados = r.paros
+      .reduce((a, b) => a + Number(b.minutos || 0), 0);
+
+    const parosPlaneados = (r.paros || [])
       .filter((p) => p.tipo === "Planeado")
-      .reduce((a, b) => a + Number(b.minutos), 0);
+      .reduce((a, b) => a + Number(b.minutos || 0), 0);
 
     const tiempoOperativo = tiempoProgramado - parosNoPlaneados - parosPlaneados;
-    const tiempoOperativoNeto = r.piezasTotales / eph;
-    const perdidaRitmo = tiempoOperativo - tiempoOperativoNeto;
-    const perdidasCalidad = (r.piezasTotales - r.piezasBuenas) / eph;
-    const tiempoUtil = tiempoOperativoNeto - perdidasCalidad;
 
-    // Cálculo de tasas
-    const disponibilidad = tiempoOperativo / tiempoProgramado;
-    const desempeno = tiempoOperativoNeto / tiempoOperativo;
-    const calidad = tiempoUtil / tiempoOperativoNeto;
+    // --- Producción ---
+    const piezasTotales = Number(r.piezasTotales || 0);
+    const piezasBuenas = Number(r.piezasBuenas || 0);
+
+    const tiempoOperativoNeto = piezasTotales > 0 ? piezasTotales / eph : 0;
+    const perdidaRitmo =
+      tiempoOperativo > 0 ? tiempoOperativo - tiempoOperativoNeto : 0;
+    const perdidasCalidad =
+      piezasTotales > 0 ? (piezasTotales - piezasBuenas) / eph : 0;
+    const tiempoUtil = Math.max(tiempoOperativoNeto - perdidasCalidad, 0);
+
+    // --- Tasas ---
+    const disponibilidad =
+      tiempoProgramado > 0 ? tiempoOperativo / tiempoProgramado : 0;
+    const desempeno =
+      tiempoOperativo > 0 ? tiempoOperativoNeto / tiempoOperativo : 0;
+    const calidad =
+      tiempoOperativoNeto > 0 ? tiempoUtil / tiempoOperativoNeto : 0;
     const oeeFinal = disponibilidad * desempeno * calidad;
 
     setOee({
