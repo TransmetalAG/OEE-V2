@@ -4,6 +4,7 @@ import { operadores } from "../data/operadores";
 
 export default function Captura() {
   const [form, setForm] = useState({
+    fecha: new Date().toISOString().split("T")[0],
     codigo: "",
     nombre: "",
     maquina: "",
@@ -38,7 +39,7 @@ export default function Captura() {
     });
   };
 
-  // Agregar paro
+  // Agregar paro solo si está completo
   const agregarParo = () => {
     if (!nuevoParo.tipo || !nuevoParo.minutos || !nuevoParo.descripcion) {
       alert("Debes completar tipo, minutos y descripción del paro.");
@@ -53,13 +54,31 @@ export default function Captura() {
     setForm({ ...form, paros: form.paros.filter((_, idx) => idx !== i) });
   };
 
-  // Guardar en localStorage
+  // Validar y guardar en localStorage
   const guardar = () => {
+    if (
+      !form.fecha ||
+      !form.codigo ||
+      !form.nombre ||
+      !form.maquina ||
+      !form.proceso ||
+      !form.inicio ||
+      !form.fin ||
+      !form.carretas ||
+      !form.piezasTotales ||
+      !form.piezasBuenas
+    ) {
+      alert("⚠️ Debes completar todos los campos antes de guardar.");
+      return;
+    }
+
     const registros = JSON.parse(localStorage.getItem("registros") || "[]");
     registros.push(form);
     localStorage.setItem("registros", JSON.stringify(registros));
     alert("Registro guardado ✅");
+
     setForm({
+      fecha: new Date().toISOString().split("T")[0],
       codigo: "",
       nombre: "",
       maquina: "",
@@ -76,6 +95,16 @@ export default function Captura() {
   return (
     <div className="p-4 bg-white shadow">
       <h2 className="text-xl font-bold mb-4">Registro de Producción</h2>
+
+      {/* Fecha */}
+      <label className="block font-semibold">Fecha</label>
+      <input
+        type="date"
+        name="fecha"
+        value={form.fecha}
+        onChange={handleChange}
+        className="border p-2 w-full mb-2 rounded-none"
+      />
 
       {/* Código operador */}
       <label className="block font-semibold">Código de Operador</label>
@@ -95,12 +124,14 @@ export default function Captura() {
         className="border p-2 w-full mb-2 bg-gray-100 rounded-none"
       />
 
-      {/* Menú 1: Máquina */}
+      {/* Máquina */}
       <label className="block font-semibold">Máquina</label>
       <select
         name="maquina"
         value={form.maquina}
-        onChange={(e) => setForm({ ...form, maquina: e.target.value, proceso: "" })}
+        onChange={(e) =>
+          setForm({ ...form, maquina: e.target.value, proceso: "" })
+        }
         className="border p-2 w-full mb-2 rounded-none"
       >
         <option value="">Seleccione máquina...</option>
@@ -111,7 +142,7 @@ export default function Captura() {
         ))}
       </select>
 
-      {/* Menú 2: Proceso / Pieza */}
+      {/* Proceso */}
       <label className="block font-semibold">Proceso / Pieza</label>
       <select
         name="proceso"
@@ -201,14 +232,18 @@ export default function Captura() {
           type="number"
           placeholder="Minutos"
           value={nuevoParo.minutos}
-          onChange={(e) => setNuevoParo({ ...nuevoParo, minutos: e.target.value })}
+          onChange={(e) =>
+            setNuevoParo({ ...nuevoParo, minutos: e.target.value })
+          }
           className="border p-2 w-full mb-2 rounded-none"
         />
         <input
           type="text"
           placeholder="Descripción"
           value={nuevoParo.descripcion}
-          onChange={(e) => setNuevoParo({ ...nuevoParo, descripcion: e.target.value })}
+          onChange={(e) =>
+            setNuevoParo({ ...nuevoParo, descripcion: e.target.value })
+          }
           className="border p-2 w-full mb-2 rounded-none"
         />
         <button
@@ -220,7 +255,10 @@ export default function Captura() {
 
         <ul className="mt-2">
           {form.paros.map((p, i) => (
-            <li key={i} className="flex justify-between items-center border p-2 mb-1 rounded-none">
+            <li
+              key={i}
+              className="flex justify-between items-center border p-2 mb-1 rounded-none"
+            >
               <span>
                 {p.tipo} - {p.minutos} min - {p.descripcion}
               </span>
