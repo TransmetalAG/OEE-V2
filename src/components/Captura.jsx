@@ -4,14 +4,16 @@ import { operadores } from "../data/operadores";
 
 export default function Captura() {
   const [form, setForm] = useState({
+    fecha: new Date().toISOString().split("T")[0],
     codigo: "",
     nombre: "",
     maquina: "",
+    proceso: "",
     inicio: "",
     fin: "",
     carretas: "",
-    piezasTotales: "",
-    piezasBuenas: "",
+    piezasTotales: 0,
+    piezasBuenas: 0,
     paros: [],
   });
 
@@ -48,38 +50,95 @@ export default function Captura() {
     setForm({ ...form, paros: form.paros.filter((_, idx) => idx !== i) });
   };
 
-  const guardar = () => {
-    const registros = JSON.parse(localStorage.getItem("registros") || "[]");
-    registros.push(form);
-    localStorage.setItem("registros", JSON.stringify(registros));
-    alert("Registro guardado ✅");
+  const limpiar = () => {
     setForm({
+      fecha: new Date().toISOString().split("T")[0],
       codigo: "",
       nombre: "",
       maquina: "",
+      proceso: "",
       inicio: "",
       fin: "",
       carretas: "",
-      piezasTotales: "",
-      piezasBuenas: "",
+      piezasTotales: 0,
+      piezasBuenas: 0,
       paros: [],
     });
   };
 
+  const guardar = () => {
+    if (!form.maquina || !form.proceso || !form.codigo) {
+      alert("Revisa los campos marcados antes de guardar.");
+      return;
+    }
+    const registros = JSON.parse(localStorage.getItem("registros") || "[]");
+    registros.push(form);
+    localStorage.setItem("registros", JSON.stringify(registros));
+    alert("Registro guardado ✅");
+    limpiar();
+  };
+
   return (
     <div className="p-4 bg-white rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Captura de Datos</h2>
+      <h2 className="text-xl font-bold mb-4">Registro de Producción</h2>
 
-      <label className="block font-semibold">Código de Operador</label>
-      <input
-        type="text"
-        name="codigo"
-        value={form.codigo}
-        onChange={handleCodigo}
+      <label className="block font-semibold">Máquina</label>
+      <select
+        name="maquina"
+        value={form.maquina}
+        onChange={(e) => setForm({ ...form, maquina: e.target.value, proceso: "" })}
         className="border p-2 w-full mb-2"
-      />
+      >
+        <option value="">Seleccione...</option>
+        {[...new Set(catalogo.map((m) => m.maquina))].map((maq, i) => (
+          <option key={i} value={maq}>
+            {maq}
+          </option>
+        ))}
+      </select>
 
-      <label className="block font-semibold">Nombre</label>
+      <label className="block font-semibold">Proceso / Pieza</label>
+      <select
+        name="proceso"
+        value={form.proceso}
+        onChange={handleChange}
+        className="border p-2 w-full mb-2"
+        disabled={!form.maquina}
+      >
+        <option value="">Seleccione...</option>
+        {catalogo
+          .filter((m) => m.maquina === form.maquina)
+          .map((p, i) => (
+            <option key={i} value={p.proceso}>
+              {p.proceso}
+            </option>
+          ))}
+      </select>
+
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <label className="block font-semibold">Fecha</label>
+          <input
+            type="date"
+            name="fecha"
+            value={form.fecha}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block font-semibold">Código operador</label>
+          <input
+            type="text"
+            name="codigo"
+            value={form.codigo}
+            onChange={handleCodigo}
+            className="border p-2 w-full mb-2"
+          />
+        </div>
+      </div>
+
+      <label className="block font-semibold">Nombre y apellido</label>
       <input
         type="text"
         value={form.nombre}
@@ -87,24 +146,9 @@ export default function Captura() {
         className="border p-2 w-full mb-2 bg-gray-100"
       />
 
-      <label className="block font-semibold">Máquina / Proceso</label>
-      <select
-        name="maquina"
-        value={form.maquina}
-        onChange={handleChange}
-        className="border p-2 w-full mb-2"
-      >
-        <option value="">Seleccione...</option>
-        {catalogo.map((m, i) => (
-          <option key={i} value={m.maquina}>
-            {m.maquina} • {m.proceso}
-          </option>
-        ))}
-      </select>
-
       <div className="flex gap-2">
         <div className="flex-1">
-          <label className="block font-semibold">Hora Inicio</label>
+          <label className="block font-semibold">Hora inicio</label>
           <input
             type="time"
             name="inicio"
@@ -114,7 +158,7 @@ export default function Captura() {
           />
         </div>
         <div className="flex-1">
-          <label className="block font-semibold">Hora Fin</label>
+          <label className="block font-semibold">Hora fin</label>
           <input
             type="time"
             name="fin"
@@ -125,7 +169,7 @@ export default function Captura() {
         </div>
       </div>
 
-      <label className="block font-semibold">Carretas Programadas</label>
+      <label className="block font-semibold">Carretas programadas</label>
       <input
         type="number"
         name="carretas"
@@ -134,23 +178,28 @@ export default function Captura() {
         className="border p-2 w-full mb-2"
       />
 
-      <label className="block font-semibold">Piezas Totales</label>
-      <input
-        type="number"
-        name="piezasTotales"
-        value={form.piezasTotales}
-        onChange={handleChange}
-        className="border p-2 w-full mb-2"
-      />
-
-      <label className="block font-semibold">Piezas Buenas</label>
-      <input
-        type="number"
-        name="piezasBuenas"
-        value={form.piezasBuenas}
-        onChange={handleChange}
-        className="border p-2 w-full mb-2"
-      />
+      <div className="flex gap-2">
+        <div className="flex-1">
+          <label className="block font-semibold">Piezas totales</label>
+          <input
+            type="number"
+            name="piezasTotales"
+            value={form.piezasTotales}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block font-semibold">Piezas buenas</label>
+          <input
+            type="number"
+            name="piezasBuenas"
+            value={form.piezasBuenas}
+            onChange={handleChange}
+            className="border p-2 w-full mb-2"
+          />
+        </div>
+      </div>
 
       <div className="mt-4">
         <h3 className="font-semibold mb-2">Paros</h3>
@@ -187,7 +236,7 @@ export default function Captura() {
           onClick={agregarParo}
           className="bg-blue-600 text-white px-4 py-2 rounded"
         >
-          Agregar paro
+          + Agregar paro
         </button>
 
         <ul className="mt-2">
@@ -210,12 +259,20 @@ export default function Captura() {
         </ul>
       </div>
 
-      <button
-        onClick={guardar}
-        className="bg-green-600 text-white px-4 py-2 rounded mt-4"
-      >
-        Guardar Registro
-      </button>
+      <div className="flex gap-2 mt-4">
+        <button
+          onClick={guardar}
+          className="bg-green-600 text-white px-4 py-2 rounded"
+        >
+          Guardar registro
+        </button>
+        <button
+          onClick={limpiar}
+          className="bg-gray-500 text-white px-4 py-2 rounded"
+        >
+          Limpiar todo
+        </button>
+      </div>
     </div>
   );
 }
