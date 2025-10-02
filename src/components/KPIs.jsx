@@ -91,52 +91,55 @@ export default function KPIs() {
         )}
       </div>
 
-      <table className="w-full border text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="border p-2">Fecha</th>
-            <th className="border p-2">Máquina</th>
-            <th className="border p-2">Proceso</th>
-            <th className="border p-2">Tiempo Programado</th>
-            <th className="border p-2">Paros No Planeados</th>
-            <th className="border p-2">Paros Planeados</th>
-            <th className="border p-2">Tiempo Operativo</th>
-            <th className="border p-2">Pérdida de Ritmo</th>
-            <th className="border p-2">Tiempo Operativo Neto</th>
-            <th className="border p-2">Pérdidas de Calidad</th>
-            <th className="border p-2">Tiempo Útil</th>
-            <th className="border p-2">Disponibilidad</th>
-            <th className="border p-2">Desempeño</th>
-            <th className="border p-2">Calidad</th>
-            <th className="border p-2">OEE</th>
-          </tr>
-        </thead>
-        <tbody>
-          {registrosFiltrados.map((r, i) => {
-            const oee = calcularOEE(r);
-            if (!oee) return null;
-            return (
-              <tr key={i} className="text-center">
-                <td className="border p-2">{r.fecha}</td>
-                <td className="border p-2">{r.maquina}</td>
-                <td className="border p-2">{r.proceso}</td>
-                <td className="border p-2">{oee.tiempoProgramado.toFixed(1)}</td>
-                <td className="border p-2">{oee.parosNoPlaneados}</td>
-                <td className="border p-2">{oee.parosPlaneados}</td>
-                <td className="border p-2">{oee.tiempoOperativo.toFixed(1)}</td>
-                <td className="border p-2">{oee.perdidaRitmo.toFixed(1)}</td>
-                <td className="border p-2">{oee.tiempoOperativoNeto.toFixed(1)}</td>
-                <td className="border p-2">{oee.perdidasCalidad.toFixed(1)}</td>
-                <td className="border p-2">{oee.tiempoUtil.toFixed(1)}</td>
-                <td className="border p-2">{(oee.disponibilidad * 100).toFixed(1)}%</td>
-                <td className="border p-2">{(oee.desempeno * 100).toFixed(1)}%</td>
-                <td className="border p-2">{(oee.calidad * 100).toFixed(1)}%</td>
-                <td className="border p-2 font-bold">{(oee.oee * 100).toFixed(1)}%</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {/* Tabla con scroll horizontal y encabezado fijo */}
+      <div className="overflow-x-auto">
+        <table className="min-w-max border text-sm">
+          <thead className="bg-gray-100 sticky top-0 z-10">
+            <tr>
+              <th className="border p-2">Fecha</th>
+              <th className="border p-2">Máquina</th>
+              <th className="border p-2">Proceso</th>
+              <th className="border p-2">Tiempo Programado</th>
+              <th className="border p-2">Paros No Planeados</th>
+              <th className="border p-2">Paros Planeados</th>
+              <th className="border p-2">Tiempo Operativo</th>
+              <th className="border p-2">Pérdida de Ritmo</th>
+              <th className="border p-2">Tiempo Operativo Neto</th>
+              <th className="border p-2">Pérdidas de Calidad</th>
+              <th className="border p-2">Tiempo Útil</th>
+              <th className="border p-2">Disponibilidad</th>
+              <th className="border p-2">Desempeño</th>
+              <th className="border p-2">Calidad</th>
+              <th className="border p-2">OEE</th>
+            </tr>
+          </thead>
+          <tbody>
+            {registrosFiltrados.map((r, i) => {
+              const oee = calcularOEE(r);
+              if (!oee) return null;
+              return (
+                <tr key={i} className="text-center">
+                  <td className="border p-2">{r.fecha}</td>
+                  <td className="border p-2">{r.maquina}</td>
+                  <td className="border p-2">{r.proceso}</td>
+                  <td className="border p-2">{oee.tiempoProgramado.toFixed(1)}</td>
+                  <td className="border p-2">{oee.parosNoPlaneados}</td>
+                  <td className="border p-2">{oee.parosPlaneados}</td>
+                  <td className="border p-2">{oee.tiempoOperativo.toFixed(1)}</td>
+                  <td className="border p-2">{oee.perdidaRitmo.toFixed(1)}</td>
+                  <td className="border p-2">{oee.tiempoOperativoNeto.toFixed(1)}</td>
+                  <td className="border p-2">{oee.perdidasCalidad.toFixed(1)}</td>
+                  <td className="border p-2">{oee.tiempoUtil.toFixed(1)}</td>
+                  <td className="border p-2">{(oee.disponibilidad * 100).toFixed(1)}%</td>
+                  <td className="border p-2">{(oee.desempeno * 100).toFixed(1)}%</td>
+                  <td className="border p-2">{(oee.calidad * 100).toFixed(1)}%</td>
+                  <td className="border p-2 font-bold">{(oee.oee * 100).toFixed(1)}%</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
