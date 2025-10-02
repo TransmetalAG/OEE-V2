@@ -17,12 +17,6 @@ export default function Captura() {
     paros: [],
   });
 
-  const [nuevoParo, setNuevoParo] = useState({
-    tipo: "",
-    minutos: "",
-    descripcion: "",
-  });
-
   // Cambios generales
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -39,17 +33,23 @@ export default function Captura() {
     });
   };
 
-  // Agregar paro solo si está completo
+  // Agregar un paro vacío
   const agregarParo = () => {
-    if (!nuevoParo.tipo || !nuevoParo.minutos || !nuevoParo.descripcion) {
-      alert("Debes completar tipo, minutos y descripción del paro.");
-      return;
-    }
-    setForm({ ...form, paros: [...form.paros, nuevoParo] });
-    setNuevoParo({ tipo: "", minutos: "", descripcion: "" });
+    setForm({
+      ...form,
+      paros: [...form.paros, { tipo: "", minutos: "", descripcion: "" }],
+    });
   };
 
-  // Eliminar paro
+  // Editar un paro
+  const editarParo = (index, field, value) => {
+    const nuevosParos = form.paros.map((paro, i) =>
+      i === index ? { ...paro, [field]: value } : paro
+    );
+    setForm({ ...form, paros: nuevosParos });
+  };
+
+  // Eliminar un paro
   const eliminarParo = (i) => {
     setForm({ ...form, paros: form.paros.filter((_, idx) => idx !== i) });
   };
@@ -72,11 +72,20 @@ export default function Captura() {
       return;
     }
 
+    // Validar que los paros tengan datos completos
+    for (let paro of form.paros) {
+      if (!paro.tipo || !paro.minutos || !paro.descripcion) {
+        alert("⚠️ Completa todos los campos de cada paro o elimínalos.");
+        return;
+      }
+    }
+
     const registros = JSON.parse(localStorage.getItem("registros") || "[]");
     registros.push(form);
     localStorage.setItem("registros", JSON.stringify(registros));
     alert("Registro guardado ✅");
 
+    // Reset
     setForm({
       fecha: new Date().toISOString().split("T")[0],
       codigo: "",
@@ -217,60 +226,52 @@ export default function Captura() {
       {/* Paros */}
       <div className="mt-4">
         <h3 className="font-semibold mb-2">Paros</h3>
-        <select
-          value={nuevoParo.tipo}
-          onChange={(e) => setNuevoParo({ ...nuevoParo, tipo: e.target.value })}
-          className="border p-2 w-full mb-2 rounded-none"
-        >
-          <option value="">Seleccione tipo</option>
-          <option value="Mecánico">Mecánico</option>
-          <option value="Eléctrico">Eléctrico</option>
-          <option value="Planeado">Planeado</option>
-          <option value="Otro">Otro</option>
-        </select>
-        <input
-          type="number"
-          placeholder="Minutos"
-          value={nuevoParo.minutos}
-          onChange={(e) =>
-            setNuevoParo({ ...nuevoParo, minutos: e.target.value })
-          }
-          className="border p-2 w-full mb-2 rounded-none"
-        />
-        <input
-          type="text"
-          placeholder="Descripción"
-          value={nuevoParo.descripcion}
-          onChange={(e) =>
-            setNuevoParo({ ...nuevoParo, descripcion: e.target.value })
-          }
-          className="border p-2 w-full mb-2 rounded-none"
-        />
+
+        {form.paros.map((p, i) => (
+          <div key={i} className="flex items-center gap-2 border p-2 mb-2">
+            <select
+              value={p.tipo}
+              onChange={(e) => editarParo(i, "tipo", e.target.value)}
+              className="border p-2 flex-1 rounded-none"
+            >
+              <option value="">Seleccione...</option>
+              <option value="Mecánico">Mecánico</option>
+              <option value="Eléctrico">Eléctrico</option>
+              <option value="Planeado">Planeado</option>
+              <option value="Otro">Otro</option>
+            </select>
+
+            <input
+              type="number"
+              placeholder="Minutos"
+              value={p.minutos}
+              onChange={(e) => editarParo(i, "minutos", e.target.value)}
+              className="border p-2 w-24 rounded-none"
+            />
+
+            <input
+              type="text"
+              placeholder="Descripción"
+              value={p.descripcion}
+              onChange={(e) => editarParo(i, "descripcion", e.target.value)}
+              className="border p-2 flex-1 rounded-none"
+            />
+
+            <button
+              onClick={() => eliminarParo(i)}
+              className="bg-red-600 text-white px-3 py-1 rounded-none"
+            >
+              Eliminar
+            </button>
+          </div>
+        ))}
+
         <button
           onClick={agregarParo}
           className="bg-blue-600 text-white px-4 py-2 rounded-none"
         >
-          Agregar paro
+          + Agregar paro
         </button>
-
-        <ul className="mt-2">
-          {form.paros.map((p, i) => (
-            <li
-              key={i}
-              className="flex justify-between items-center border p-2 mb-1 rounded-none"
-            >
-              <span>
-                {p.tipo} - {p.minutos} min - {p.descripcion}
-              </span>
-              <button
-                onClick={() => eliminarParo(i)}
-                className="bg-red-600 text-white px-2 py-1 rounded-none"
-              >
-                Eliminar
-              </button>
-            </li>
-          ))}
-        </ul>
       </div>
 
       {/* Botón Guardar */}
